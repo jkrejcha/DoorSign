@@ -18,6 +18,7 @@ namespace DoorSign
 		private Socket ServerSocket { get; set; }
 		private List<Socket> ClientSockets { get; } = new List<Socket>();
 		private byte[] Buffer { get; } = new byte[BufferSize];
+		public bool Running { get; private set; }
 
 		public MinecraftServer(Settings Settings, Logger Logger)
 		{
@@ -32,6 +33,7 @@ namespace DoorSign
 			ServerSocket.Bind(new IPEndPoint(IPAddress.Any, Settings.Port));
 			ServerSocket.Listen(10);
 			ServerSocket.BeginAccept(AcceptCallback, null);
+			Running = true;
 			Logger.Info("Server started.");
 		}
 
@@ -39,6 +41,7 @@ namespace DoorSign
 		{
 			Logger.Info("Stopping server...");
 			CloseAllSockets();
+			Running = false;
 			Logger.Info("Server has been shut down.");
 		}
 
@@ -56,6 +59,7 @@ namespace DoorSign
 		{
 			s.Disconnect(false);
 			s.Close();
+			ClientSockets.Remove(s);
 		}
 
 		internal Socket GetConnection(IPEndPoint ip)
