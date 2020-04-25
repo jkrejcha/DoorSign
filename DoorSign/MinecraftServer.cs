@@ -16,8 +16,6 @@ namespace DoorSign
 	/// </summary>
 	public sealed class MinecraftServer
 	{
-		private const int BufferSize = 4096;
-
 		private Settings Settings { get; set; }
 		private Logger Logger { get; set; }
 
@@ -26,10 +24,6 @@ namespace DoorSign
 		private Task ServerLoopTask { get; set; }
 
 		private CancellationTokenSource ServerLoopCancellationTokenSource { get; set; }
-
-		private Socket ServerSocket { get; set; }
-		private List<Socket> ClientSockets { get; } = new List<Socket>();
-		private byte[] Buffer { get; } = new byte[BufferSize];
 		public bool Running { get; private set; }
 
 		public MinecraftServer(Settings Settings, Logger Logger)
