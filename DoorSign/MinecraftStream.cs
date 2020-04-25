@@ -7,18 +7,36 @@ namespace DoorSign
     /// <summary>
     /// A big-endian stream for reading/writing Minecraft data types.
     /// </summary>
-    public class MinecraftStream : MemoryStream
+    public class MinecraftStream : Stream
     {
-        static MinecraftStream()
+        public static readonly Encoding StringEncoding = Encoding.UTF8;
+
+        public Stream BackingStream { get; private set; }
+
+        public override Boolean CanRead => BackingStream.CanRead;
+
+        public override Boolean CanSeek => BackingStream.CanSeek;
+
+        public override Boolean CanWrite => BackingStream.CanWrite;
+
+        public override Int64 Length => BackingStream.Length;
+
+        public override Int64 Position { get => BackingStream.Position; set { BackingStream.Position = value; } }
+
+        public MinecraftStream()
         {
-            StringEncoding = Encoding.UTF8;
+            this.BackingStream = new MemoryStream();
         }
 
-		public MinecraftStream() : base() { }
+        public MinecraftStream(Stream backingStream)
+        {
+            this.BackingStream = backingStream;
+        }
 
-		public MinecraftStream(byte[] buffer) : base(buffer) { }
-
-		public static Encoding StringEncoding;
+        public MinecraftStream(Byte[] data)
+        {
+            this.BackingStream = new MemoryStream(data);
+        }
 
         /// <summary>
         /// Reads a variable-length integer from the stream.
@@ -170,5 +188,15 @@ namespace DoorSign
             if (value.Length > 0)
                 WriteUInt8Array(StringEncoding.GetBytes(value));
         }
+
+        public override void Flush() => BackingStream.Flush();
+
+        public override Int32 Read(Byte[] buffer, Int32 offset, Int32 count) => BackingStream.Read(buffer, offset, count);
+
+        public override Int64 Seek(Int64 offset, SeekOrigin origin) => BackingStream.Seek(offset, origin);
+
+        public override void SetLength(Int64 value) => BackingStream.SetLength(value);
+
+        public override void Write(Byte[] buffer, Int32 offset, Int32 count) => BackingStream.Write(buffer, offset, count);
     }
 }

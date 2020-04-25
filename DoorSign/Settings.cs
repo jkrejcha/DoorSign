@@ -26,8 +26,8 @@ namespace DoorSign
 				},
 				version = new ServerVersion()
 				{
-					name = "DoorSign 1.15.2",
-					protocol = 578,
+					name = "DoorSign 1.13.2",
+					protocol = 404,
 				},
 			};
 			KickMessage = "The server is not online right now...";
