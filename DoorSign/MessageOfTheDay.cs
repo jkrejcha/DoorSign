@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace DoorSign
 {
+	/// <summary>
+	/// A wrapper for the message of the day. This includes the server list text,
+	/// player count, and version reported to the client.
+	/// </summary>
 	public class MessageOfTheDay
 	{
 		public Chat description;

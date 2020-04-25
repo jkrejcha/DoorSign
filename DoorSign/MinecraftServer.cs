@@ -9,7 +9,11 @@ using System.Threading.Tasks;
 
 namespace DoorSign
 {
-	class MinecraftServer
+	/// <summary>
+	/// A simple Minecraft server that implements the server list, login, and
+	/// disconnect packets.
+	/// </summary>
+	public sealed class MinecraftServer
 	{
 		private const int BufferSize = 4096;
 
