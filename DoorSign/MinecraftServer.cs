@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DoorSign
@@ -19,6 +20,13 @@ namespace DoorSign
 
 		private Settings Settings { get; set; }
 		private Logger Logger { get; set; }
+
+		private TcpListener TcpListener { get; set; }
+
+		private Task ServerLoopTask { get; set; }
+
+		private CancellationTokenSource ServerLoopCancellationTokenSource { get; set; }
+
 		private Socket ServerSocket { get; set; }
 		private List<Socket> ClientSockets { get; } = new List<Socket>();
 		private byte[] Buffer { get; } = new byte[BufferSize];
@@ -30,109 +38,89 @@ namespace DoorSign
 			this.Logger = Logger;
 		}
 
-		public void Start()
+		public async Task StartAsync()
 		{
 			Logger.Info("Starting DoorSign Minecraft Server on port " + Settings.Port);
-			ServerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-			ServerSocket.Bind(new IPEndPoint(IPAddress.Any, Settings.Port));
-			ServerSocket.Listen(10);
-			ServerSocket.BeginAccept(AcceptCallback, null);
+			TcpListener = TcpListener.Create(Settings.Port);
+			TcpListener.Start();
+			ServerLoopCancellationTokenSource = new CancellationTokenSource();
 			Running = true;
 			Logger.Info("Server started.");
+			CancellationToken token = ServerLoopCancellationTokenSource.Token;
+			await DoServerLoopAsync(token);
 		}
 
-		public void Stop()
+		public async Task DoServerLoopAsync(CancellationToken token)
+		{
+			while (!token.IsCancellationRequested)
+			{
+				if (TcpListener.Pending())
+				{
+					try
+					{
+						TcpClient client = await TcpListener.AcceptTcpClientAsync();
+						client.LingerState = new LingerOption(false, 0);
+						Logger.Debug("Handling new client");
+						_ = HandleClientAsync(client);
+					}
+					catch (Exception ex)
+					{
+						Logger.Warning(ex.ToString());
+					}
+				}
+				else
+				{
+					try
+					{
+
+						await Task.Delay(100, token);
+					}
+					catch (OperationCanceledException)
+					{
+						return;
+					}
+				}
+			}
+		}
+
+		public async Task StopAsync()
 		{
 			Logger.Info("Stopping server...");
-			CloseAllSockets();
+			ServerLoopCancellationTokenSource.Cancel();
+			while (ServerLoopTask.Status == TaskStatus.Running)
+			{
+				await Task.Delay(200);
+			}
 			Running = false;
 			Logger.Info("Server has been shut down.");
 		}
 
-		/// <summary>
-		/// Close all connected clients (we do not need to shutdown the server socket as its connections
-		/// are already closed with the clients)
-		/// </summary>
-		internal void CloseAllSockets()
+		private void Disconnect(TcpClient client)
 		{
-			ClientSockets.ForEach(socket => socket.Shutdown(SocketShutdown.Both));
-			ServerSocket.Close();
+			if (client.Connected)
+			{
+				client.GetStream().Close();
+			}
+			client.Close();
 		}
 
-		internal void Disconnect(Socket s)
+		private async Task HandleClientAsync(TcpClient client)
 		{
-			s.Disconnect(false);
-			s.Close();
-			ClientSockets.Remove(s);
-		}
-
-		internal Socket GetConnection(IPEndPoint ip)
-		{
-			return ClientSockets.FirstOrDefault(s => (IPEndPoint)s.RemoteEndPoint == ip);
-		}
-
-		private void AcceptCallback(IAsyncResult AR)
-		{
-			Socket socket;
-			try
+			NetworkStream networkStream = client.GetStream();
+			while (client.Connected)
 			{
-				socket = ServerSocket.EndAccept(AR);
-			}
-			catch (ObjectDisposedException) // I cannot seem to avoid this (on exit when properly closing sockets)
-			{
-				return;
-			}
-
-			ClientSockets.Add(socket);
-			socket.BeginReceive(Buffer, 0, BufferSize, SocketFlags.None, ReceiveCallback, socket);
-			ServerSocket.BeginAccept(AcceptCallback, null);
-		}
-
-		private void ReceiveCallback(IAsyncResult AR)
-		{
-			Socket current = (Socket)AR.AsyncState;
-			int received;
-
-			try
-			{
-				received = current.EndReceive(AR);
-			}
-			catch (ObjectDisposedException)
-			{
-				return;
-			}
-			catch (SocketException)
-			{
-				Logger.Info("Client forcefully disconnected (or lost connection).");
-				current.Close();
-				ClientSockets.Remove(current);
-				return;
-			}
-
-			byte[] recBuf = new byte[received];
-			Array.Copy(Buffer, recBuf, received);
-			HandleConnection(current, recBuf, (IPEndPoint)current.RemoteEndPoint);
-			try
-			{
-				current.BeginReceive(Buffer, 0, BufferSize, SocketFlags.None, ReceiveCallback, current);
-			}
-			catch (Exception)
-			{
-				//TODO: log?
+				MinecraftStream minecraftStream = new MinecraftStream(networkStream);
+				await HandleConnection(client, minecraftStream, (IPEndPoint)client.Client.RemoteEndPoint);
 			}
 		}
 
-		private void HandleConnection(Socket connection, byte[] data, IPEndPoint endpoint)
+		private async Task HandleConnection(TcpClient connection, MinecraftStream dataStream, IPEndPoint endpoint)
 		{
-			if (data.Length == 0) // connection no longer valid; lets disconnect
-			{
-				Disconnect(connection);
-				return;
-			}
-			Logger.Debug("Got message from client.");
-			MinecraftStream dataStream = new MinecraftStream(data);
 			long length = dataStream.ReadVarInt();
 			long packetId = dataStream.ReadVarInt();
+
+			Byte[] response;
+			bool shouldDisconnect = false;
 
 			switch (packetId)
 			{
@@ -144,27 +132,41 @@ namespace DoorSign
 						Logger.Debug("0-length packet (for request)");
 						return;
 					}
-					bool isPing = IsServerListPing(data);
-					byte[] response = isPing ?
-									  BuildServerListPacket(Settings.GetMotdJson()) :
-									  BuildLoginKickPacket(Settings.GetKickMessageJson());
-					SendDebugMessage(response);
-					connection.Send(response);
+					bool isPing = IsServerListPing(dataStream);
+					response = isPing ?
+							   BuildServerListPacket(Settings.GetMotdJson()) :
+							   BuildLoginKickPacket(Settings.GetKickMessageJson());
 					if (!isPing)
 					{
 						Logger.Info("A user (IP: " + endpoint.Address.ToString() + ") tried to login to the server");
-						Disconnect(connection);
+						shouldDisconnect = true;
 					}
 					break;
 				case 0x01:
 					Logger.Debug("Lag Test Packet (response time shows up in server list)");
-					connection.Send(data); // send back the same data as the client requests
+					MinecraftStream minecraftStream = new MinecraftStream(new MemoryStream());
+					minecraftStream.WriteVarInt((UInt32)length);
+					minecraftStream.WriteVarInt((UInt32)packetId);
+					Byte[] echoData = new byte[length];
+					_ = await dataStream.ReadAsync(echoData, 0, (Int32)length);
+					minecraftStream.Write(echoData);
+					response = ((MemoryStream)minecraftStream.BackingStream).ToArray(); // send back the same data as the client requests
 					break;
 				default:
 					Logger.Warning("Unknown packet " + packetId + "; will try kick disconnect");
-					connection.Send(BuildLoginKickPacket(Settings.GetKickMessageJson(), true));
-					Disconnect(connection);
-					return;
+					response = BuildLoginKickPacket(Settings.GetKickMessageJson(), true);
+					shouldDisconnect = true;
+					break;
+			}
+			if (response != null)
+			{
+				SendDebugMessage(response);
+				await connection.GetStream().WriteAsync(response, 0, response.Length);
+				await dataStream.FlushAsync();
+			}
+			if (shouldDisconnect)
+			{
+				Disconnect(connection);
 			}
 		}
 
@@ -173,17 +175,17 @@ namespace DoorSign
 		/// </summary>
 		/// <param name="data">The data</param>
 		/// <returns></returns>
-		private bool IsServerListPing(byte[] data)
+		private bool IsServerListPing(MinecraftStream data)
 		{
 			Logger.Debug("Is Server List?");
-			MinecraftStream s = new MinecraftStream(data);
-			s.ReadVarInt(); // length
-			s.ReadVarInt(); // packet ID
+			MinecraftStream s = data;
+			//s.ReadVarInt(); // length
+			//s.ReadVarInt(); // packet ID
 			s.ReadVarInt(); // protocol version
 			s.ReadString(); // server IP
 			s.ReadUInt16(); // server port
 			int response = s.ReadVarInt();
-			Logger.Debug(response.ToString());
+			Logger.Debug($"Handshake Packet = {response}, Server List Packet = 1");
 			return response == 0x01;
 		}
 
