@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29728.190
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoorSign", "DoorSign\DoorSign.csproj", "{C846D1C7-B60E-42E2-8428-5A80DFE7752D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoorSign", "DoorSign\DoorSign.csproj", "{35A291CB-6A2B-4D0D-AD9A-4326F6D4E19F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,12 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C846D1C7-B60E-42E2-8428-5A80DFE7752D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C846D1C7-B60E-42E2-8428-5A80DFE7752D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C846D1C7-B60E-42E2-8428-5A80DFE7752D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C846D1C7-B60E-42E2-8428-5A80DFE7752D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35A291CB-6A2B-4D0D-AD9A-4326F6D4E19F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35A291CB-6A2B-4D0D-AD9A-4326F6D4E19F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35A291CB-6A2B-4D0D-AD9A-4326F6D4E19F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35A291CB-6A2B-4D0D-AD9A-4326F6D4E19F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D0BFFD9D-62DE-4ADD-B985-B9DD746C6F9F}
 	EndGlobalSection
 EndGlobal
