@@ -5,11 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
-<<<<<<< HEAD
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
-
-=======
->>>>>>> faad2d06d0926169eec543c45f3c22acaf12d7b2
 </Project>
