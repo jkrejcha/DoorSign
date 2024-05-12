@@ -1,10 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DoorSign
 {
@@ -26,8 +21,8 @@ namespace DoorSign
 				},
 				version = new ServerVersion()
 				{
-					name = "DoorSign 1.13.2",
-					protocol = 404,
+					name = "DoorSign 1.20.4",
+					protocol = 765,
 				},
 			};
 			KickMessage = "The server is not online right now...";
