@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 namespace DoorSign
 {
 	[JsonObject]
-	public class ServerVersion
+	public struct ServerVersion
 	{
 		public String name;
-		public int protocol;
+		public Int32 protocol;
 	}
 }

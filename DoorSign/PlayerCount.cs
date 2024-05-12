@@ -11,15 +11,15 @@ namespace DoorSign
 	/// The player count.
 	/// </summary>
 	[JsonObject]
-	public class PlayerCount
+	public struct PlayerCount
 	{
 		/// <summary>
 		/// Maximum amount of users this server supports.
 		/// </summary>
-		public int max;
+		public Int32 max;
 		/// <summary>
 		/// The amount of users currently online.
 		/// </summary>
-		public int online;
+		public Int32 online;
 	}
 }

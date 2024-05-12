@@ -10,7 +10,7 @@ namespace DoorSign
 	/// A wrapper for the message of the day. This includes the server list text,
 	/// player count, and version reported to the client.
 	/// </summary>
-	public class MessageOfTheDay
+	public struct MessageOfTheDay
 	{
 		public Chat description;
 		public PlayerCount players;

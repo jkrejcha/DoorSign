@@ -1,21 +1,17 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DoorSign
 {
 	[JsonObject]
-	public class Chat
+	public struct Chat
 	{
 		public String text;
-		public bool? bold;
-		public bool? italic;
-		public bool? underlined;
-		public bool? strikethrough;
-		public bool? obfuscated;
+		public Boolean? bold;
+		public Boolean? italic;
+		public Boolean? underlined;
+		public Boolean? strikethrough;
+		public Boolean? obfuscated;
 		public String color;
 		public ClickEvent clickEvent;
 		public HoverEvent hoverEvent;
@@ -33,15 +29,15 @@ namespace DoorSign
 			public Chat show_text;
 		}
 
-		public bool ShouldSerializebold() => bold != null;
-		public bool ShouldSerializeitalic() => italic != null;
-		public bool ShouldSerializeunderlined() => underlined != null;
-		public bool ShouldSerializestrikethrough() => strikethrough != null;
-		public bool ShouldSerializeobfuscated() => obfuscated != null;
-		public bool ShouldSerializeclickEvent() => clickEvent != null;
-		public bool ShouldSerializehoverEvent() => hoverEvent != null;
-		public bool ShouldSerializecolor() => !String.IsNullOrWhiteSpace(color);
-		public bool ShouldSerializeextra() => extra != null && extra.Length > 0;
+		public readonly Boolean ShouldSerializebold() => bold != null;
+		public readonly Boolean ShouldSerializeitalic() => italic != null;
+		public readonly Boolean ShouldSerializeunderlined() => underlined != null;
+		public readonly Boolean ShouldSerializestrikethrough() => strikethrough != null;
+		public readonly Boolean ShouldSerializeobfuscated() => obfuscated != null;
+		public readonly Boolean ShouldSerializeclickEvent() => clickEvent != null;
+		public readonly Boolean ShouldSerializehoverEvent() => hoverEvent != null;
+		public readonly Boolean ShouldSerializecolor() => !String.IsNullOrWhiteSpace(color);
+		public readonly Boolean ShouldSerializeextra() => extra != null && extra.Length > 0;
 
 		public static implicit operator Chat(String str)
 		{
