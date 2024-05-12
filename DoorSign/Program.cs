@@ -40,7 +40,6 @@ namespace DoorSign
 			Server = new MinecraftServer(Config, Log);
 			Console.CancelKeyPress += Console_CancelKeyPress;
 			Server.StartAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-			//while (Server.Running) { System.Threading.Thread.Sleep(1000); }
 		}
 
 		private static void WriteDefaultConfig()
