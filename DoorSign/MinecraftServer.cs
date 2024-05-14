@@ -64,7 +64,6 @@ namespace DoorSign
 				{
 					try
 					{
-
 						await Task.Delay(100, token);
 					}
 					catch (OperationCanceledException)
@@ -137,8 +136,8 @@ namespace DoorSign
 					minecraftStream.WriteVarInt((UInt32)length);
 					minecraftStream.WriteVarInt((UInt32)packetId);
 					Byte[] echoData = new byte[length];
-					_ = await dataStream.ReadAsync(echoData, 0, (Int32)length);
-					minecraftStream.Write(echoData);
+					_ = await dataStream.ReadAsync(echoData, 0, (Int32)length, ServerLoopCancellationTokenSource.Token);
+					await minecraftStream.WriteAsync(echoData, ServerLoopCancellationTokenSource.Token);
 					response = ((MemoryStream)minecraftStream.BackingStream).ToArray(); // send back the same data as the client requests
 					break;
 				default:
@@ -150,8 +149,8 @@ namespace DoorSign
 			if (response != null)
 			{
 				SendDebugMessage(response);
-				await connection.GetStream().WriteAsync(response, 0, response.Length);
-				await dataStream.FlushAsync();
+				await connection.GetStream().WriteAsync(response, 0, response.Length, ServerLoopCancellationTokenSource.Token);
+				await dataStream.FlushAsync(ServerLoopCancellationTokenSource.Token);
 			}
 			if (shouldDisconnect)
 			{
