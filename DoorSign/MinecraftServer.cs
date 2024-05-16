@@ -110,6 +110,10 @@ namespace DoorSign
 			Byte[] response;
 			bool shouldDisconnect = false;
 
+			// TODO: While the server is running, the MOTD and player count and such
+			// can't actually change. We can just... cache the responses for faster
+			// responses.
+
 			switch (packetId)
 			{
 				case 0x00:
