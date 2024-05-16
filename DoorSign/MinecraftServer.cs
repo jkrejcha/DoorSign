@@ -32,7 +32,7 @@ namespace DoorSign
 
 		public async Task StartAsync()
 		{
-			Logger.Info("Starting DoorSign Minecraft Server on port " + Settings.Port);
+			Logger.Info($"Starting DoorSign Minecraft Server on port {Settings.Port}");
 			TcpListener = TcpListener.Create(Settings.Port);
 			TcpListener.Start();
 			ServerLoopCancellationTokenSource = new CancellationTokenSource();
